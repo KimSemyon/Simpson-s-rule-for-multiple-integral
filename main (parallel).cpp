@@ -11,7 +11,7 @@
 
 using namespace std;
 
-double epsilon = 1e-15;// значение близкое к нулю
+double epsilon = 1e-15;// Г§Г­Г Г·ГҐГ­ГЁГҐ ГЎГ«ГЁГ§ГЄГ®ГҐ ГЄ Г­ГіГ«Гѕ
 int deep_recursion; // inversion of deep recursion
 atomic<int> count_mainthread = 0; // for pause main thread when main thread wait for other threads
 class ThreadPool
@@ -126,13 +126,13 @@ double SerialSimpsonsFunc(double Segments[], double H[], int n, int N, int _para
 	//double b = Segments[2*param+1];
 	double h = H[param];
 	int count_i = 0;
-	int count_res = 2 * n*deep_recursion; // счетчик для "external" заполнения значений функций
+	int count_res = 2 * n*deep_recursion; // Г±Г·ГҐГІГ·ГЁГЄ Г¤Г«Гї "external" Г§Г ГЇГ®Г«Г­ГҐГ­ГЁГї Г§Г­Г Г·ГҐГ­ГЁГ© ГґГіГ­ГЄГ¶ГЁГ©
 	for (double i = a; count_i<2*n; i += h, count_i++)
 	{
 		if (param < (N - 1)) { 
 			X[param] = i; 
 			param++;
-			F[count_res] = SerialSimpsonsFunc(Segments, H, n, N, param, X, F); //Заполнение F 2n позиций 
+			F[count_res] = SerialSimpsonsFunc(Segments, H, n, N, param, X, F); //Г‡Г ГЇГ®Г«Г­ГҐГ­ГЁГҐ F 2n ГЇГ®Г§ГЁГ¶ГЁГ© 
 			count_res++;
 			param--; 
 		} //
@@ -142,7 +142,7 @@ double SerialSimpsonsFunc(double Segments[], double H[], int n, int N, int _para
 			count_res++;
 		}
 	}
-//------------------------------------------------------------------Вычисляем внешнюю сумму	
+//------------------------------------------------------------------Г‚Г»Г·ГЁГ±Г«ГїГҐГ¬ ГўГ­ГҐГёГ­ГѕГѕ Г±ГіГ¬Г¬Гі	
 	count_res = 2 * n*deep_recursion;
 
 	SumOfIntegral += F[count_res];
@@ -170,24 +170,24 @@ double ParallelSimpsonsFunc(ThreadPool &p, double Segments[], double H[], int n,
 	double a = Segments[2 * param];
 	//double b = Segments[2 * param + 1];
 	double h = H[param];
-	int count_res = 2 * n*deep_recursion; // счетчик для "external" заполнения значений функций
+	int count_res = 2 * n*deep_recursion; // Г±Г·ГҐГІГ·ГЁГЄ Г¤Г«Гї "external" Г§Г ГЇГ®Г«Г­ГҐГ­ГЁГї Г§Г­Г Г·ГҐГ­ГЁГ© ГґГіГ­ГЄГ¶ГЁГ©
 	for (double i = a, count_i = 0; count_i < 2 * n; i += h, count_i++)
 	{
 		if (param < (N - 1)) {
 			X[param] = i;
 			param++;
-			F[count_res] = ParallelSimpsonsFunc(p, Segments, H, n, N, param, X, F, nthreads); //Заполнение F 2n позиций 
+			F[count_res] = ParallelSimpsonsFunc(p, Segments, H, n, N, param, X, F, nthreads); //Г‡Г ГЇГ®Г«Г­ГҐГ­ГЁГҐ F 2n ГЇГ®Г§ГЁГ¶ГЁГ© 
 			count_res++;
 			param--;
 		} //
 		else {
 			for (int t = 0; t < nthreads; t++){
-				double a_ = (t * n / nthreads) * h;
+				double a_ = a+(t * n / nthreads) * h;
 				//double b_ = ((t + 1) * 2 * n / nthreads - 1) * h;
 				p.doJob(std::bind(Simpf, a_, h, n, N, X, std::ref(F), t * n / nthreads, (t + 1) * n / nthreads));
 			}
 
-			Simpf(n * h, h, n, N, X, F, n, 2 * n); // main thread works
+			Simpf(a+n * h, h, n, N, X, F, n, 2 * n); // main thread works
 
 			while (true){// main thread wait for other threads when queue jobs_ is temporarily empty
 			if (count_mainthread == nthreads+1) { count_mainthread = 0; break; }
@@ -197,7 +197,7 @@ double ParallelSimpsonsFunc(ThreadPool &p, double Segments[], double H[], int n,
 	}
 	
 	
-	//------------------------------------------------------------------Вычисляем внешнюю сумму	
+	//------------------------------------------------------------------Г‚Г»Г·ГЁГ±Г«ГїГҐГ¬ ГўГ­ГҐГёГ­ГѕГѕ Г±ГіГ¬Г¬Гі	
 	count_res = 2 * n*deep_recursion;
 
 	SumOfIntegral += F[count_res];
@@ -220,20 +220,20 @@ double ParallelSimpsonsFunc(ThreadPool &p, double Segments[], double H[], int n,
 
 int main() {
 		
-	int N; // размерность интеграла
-	int n; // количество точек на отрезке /2
+	int N; // Г°Г Г§Г¬ГҐГ°Г­Г®Г±ГІГј ГЁГ­ГІГҐГЈГ°Г Г«Г 
+	int n; // ГЄГ®Г«ГЁГ·ГҐГ±ГІГўГ® ГІГ®Г·ГҐГЄ Г­Г  Г®ГІГ°ГҐГ§ГЄГҐ /2
 		
 	cout << "Enter the dimension of the integral: ";
 	cin >> N;
 
-	double *Segments = new double[2 * N]; // Выделение памяти для массива пределов интегрирования
+	double *Segments = new double[2 * N]; // Г‚Г»Г¤ГҐГ«ГҐГ­ГЁГҐ ГЇГ Г¬ГїГІГЁ Г¤Г«Гї Г¬Г Г±Г±ГЁГўГ  ГЇГ°ГҐГ¤ГҐГ«Г®Гў ГЁГ­ГІГҐГЈГ°ГЁГ°Г®ГўГ Г­ГЁГї
 	
 	cout << "Enter the number of points on the segment: ";
 	cin >> n;
 
 	cout << "Enter pairs of integration limits starting from internal in the amount of " << N << ": ";
 	
-	for (int i = 0; i < 2*N; i++) { // Заполнение массива отрезков 
+	for (int i = 0; i < 2*N; i++) { // Г‡Г ГЇГ®Г«Г­ГҐГ­ГЁГҐ Г¬Г Г±Г±ГЁГўГ  Г®ГІГ°ГҐГ§ГЄГ®Гў 
 		cin >> Segments[i];
 	}
 	
@@ -243,7 +243,7 @@ int main() {
 	//cout << "Enter the number of threads: ";
 	//cin >> nthreads;
 	
-	double *H = new double[N]; //Вычислили значения шагов
+	double *H = new double[N]; //Г‚Г»Г·ГЁГ±Г«ГЁГ«ГЁ Г§Г­Г Г·ГҐГ­ГЁГї ГёГ ГЈГ®Гў
 	for (int i = 0; i < N; i++){
 		H[i] = (Segments[2 * i + 1] - Segments[2 * i]) / (2 * n - 1);
 	}
@@ -273,7 +273,7 @@ int main() {
 	*/
 
 	//
-	//if (fabs(REAL_result - result) < epsilon) { printf("Решение получено"); break;}
+	//if (fabs(REAL_result - result) < epsilon) { printf("ГђГҐГёГҐГ­ГЁГҐ ГЇГ®Г«ГіГ·ГҐГ­Г®"); break;}
 	//
 	//func_change_n(&n);				//void func_change_n(int *n) {*n *= 2;}
 	//}
